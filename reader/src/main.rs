@@ -22,12 +22,29 @@ fn main() {
 
     let tokens: Vec<&str> = text.split_whitespace().collect();
 
-    let group = tokens.windows(3);
+    let mut parse = false;
+    let mut lines = Vec::new();
+
+    for word in tokens{
+        if word == "MATT."{
+            parse = false;
+            lines.push("END");
+        }
+        if parse{
+            lines.push(word);
+        }
+        if word == "MIKE."{
+            parse = true;
+            lines.push("START");
+        }
+    }
+
+    let group = lines.windows(3);
 
     let mut histogram: HashMap<&str, (&str, &str)> = HashMap::new();
 
     for words in group {
-        
+
         let prefix = words[0];
         let suffix = (words[1], words[2]);
         histogram.insert(prefix, suffix);
@@ -37,6 +54,11 @@ fn main() {
         println!("{} / {:?}", key, value)
     }
 
+// To parse just Hamlet's lines we will need to match this pattern:
+// go through all the words.
+// if the word is HAMLET. then have a start token,
+// collect all the words until double new line,
+// add an end token.
 
 
 }
