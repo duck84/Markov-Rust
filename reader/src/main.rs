@@ -1,3 +1,4 @@
+extern crate rand;
 use std::io::Read;
 use std::error::Error;
 use std::path::Path;
@@ -6,7 +7,7 @@ use std::collections::HashMap;
 
 
 fn main() {
-    let path = Path::new("../../text/test.txt");
+    let path = Path::new("../../text/hamlet.txt");
     let display = path.display();
 
     let mut file = match File::open(&path){
@@ -24,19 +25,22 @@ fn main() {
 
     let mut parse = false;
     let mut lines = Vec::new();
+    let mut last = "";
 
     for word in tokens{
-        if word == "MATT."{
+        if word.ends_with(".") & (last.ends_with(".")){
             parse = false;
-            lines.push("END");
+//            lines.push("END");
         }
         if parse{
             lines.push(word);
         }
-        if word == "MIKE."{
+        if word == "HAMLET."{
             parse = true;
-            lines.push("START");
+//            lines.push("START");
         }
+
+        last = word;
     }
 
     let group = lines.windows(3);
@@ -50,15 +54,28 @@ fn main() {
         histogram.insert(prefix, suffix);
     }
 
-    for(key, value) in histogram{
-        println!("{} / {:?}", key, value)
+//    for(key, value) in histogram{
+//        println!("{} / {:?}", key, value)
+//    }
+
+    let mut potential_starts: Vec<&&str> = histogram.keys().collect();
+    let random: usize = 45;
+
+    let mut prefix: &str = potential_starts[random];
+
+    let mut result = prefix.to_string();
+
+    for _ in 1 ..50 {
+        match histogram.get(&prefix) {
+            Some(suffixes) => {
+                result = result + " " + suffixes.0 + " " + suffixes.1;
+                prefix = suffixes.1;
+            },
+            None => {
+                break;
+            }
+
+        }
     }
-
-// To parse just Hamlet's lines we will need to match this pattern:
-// go through all the words.
-// if the word is HAMLET. then have a start token,
-// collect all the words until double new line,
-// add an end token.
-
-
+    print!("{}\n", result);
 }
