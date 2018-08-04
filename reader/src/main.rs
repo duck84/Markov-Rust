@@ -21,11 +21,39 @@ fn main() {
         Ok(_) => print!("{} contains:\n{}", display, text),
     }
 
-    let tokens: Vec<&str> = text.split_whitespace().collect();
+    //Filtering out non-speech words that don't start/end with valid chars
+    //Doesn't catch stuff like "_Hic et ubique?_"
+    let tokens: Vec<&str> = text.split_whitespace()
+                                        .collect::<Vec<_>>()
+                                        .into_iter()
+                                        .filter(|word| word.chars()
+                                                            .next()
+                                                            .unwrap()
+                                                            .is_alphabetic()
+                                                        &&word.chars()
+                                                                .last()
+                                                                .unwrap() != '_')
+                                        .collect();
 
     let mut parse = false;
     let mut lines = Vec::new();
     let mut last = "";
+
+    //********************UNUSED BLOCK
+    let mut dict = HashMap::new();
+    let mut key = "";
+    for word in &tokens{
+        //Finds capitalized NAMES. and sets KEY
+        if word == &word.to_uppercase()
+            && word.ends_with("."){
+            key = word;
+        }
+        //ELSE push WORD to DICT
+        else{
+            dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
+        }
+    }
+    //********************UNUSED BLOCK
 
     for word in tokens{
         if word.ends_with(".") & (last.ends_with(".")){
@@ -43,6 +71,16 @@ fn main() {
         last = word;
     }
 
+    //***********SET CHARACTER ***************
+    let speaker = "HORATIO."; //remove trailing period later
+    match dict.get(speaker){
+        Some(vocab) => lines = vocab.to_vec(),
+        None => println!("No character named: {}", speaker),
+    }
+    println!("{} says...", speaker);
+
+    //***********HISTOGRAM ***************
+
     let group = lines.windows(3);
 
     let mut histogram: HashMap<&str, (&str, &str)> = HashMap::new();
@@ -58,7 +96,7 @@ fn main() {
 //        println!("{} / {:?}", key, value)
 //    }
 
-    let mut potential_starts: Vec<&&str> = histogram.keys().collect();
+    let potential_starts: Vec<&&str> = histogram.keys().collect();
     let random: usize = 45;
 
     let mut prefix: &str = potential_starts[random];
