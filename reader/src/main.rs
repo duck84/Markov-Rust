@@ -39,7 +39,6 @@ fn main() {
     let mut lines = Vec::new();
     let mut last = "";
 
-    //********************UNUSED BLOCK
     let mut dict = HashMap::new();
     let mut key = "";
     for word in &tokens{
@@ -53,7 +52,8 @@ fn main() {
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
         }
     }
-    //********************UNUSED BLOCK
+
+    //********************UNUSED BLOCK, clean later
 
     for word in tokens{
         if word.ends_with(".") & (last.ends_with(".")){
@@ -70,6 +70,7 @@ fn main() {
 
         last = word;
     }
+    //********************UNUSED BLOCK
 
     //***********SET CHARACTER ***************
     let speaker = "HORATIO."; //remove trailing period later
