@@ -4,7 +4,7 @@ use std::error::Error;
 use std::path::Path;
 use std::fs::File;
 use std::collections::HashMap;
-
+use rand::prelude::*;
 
 fn main() {
     let path = Path::new("../../text/hamlet.txt");
@@ -18,12 +18,13 @@ fn main() {
     let mut text = String::new();
     match file.read_to_string(&mut text) {
         Err(why) => panic!("could not open {}: {}", display, why.description()),
-        Ok(_) => print!("{} contains:\n{}", display, text),
+        Ok(_) => println!("File read success"),//print!("{} contains:\n{}", display, text),
     }
 
     //Filtering out non-speech words that don't start/end with valid chars
     //Doesn't catch stuff like "_Hic et ubique?_"
-    let tokens: Vec<&str> = text.split_whitespace()
+    let textstring = text.replace("’","'"); //terminal output can't print the first one
+    let tokens: Vec<&str> = textstring.split_whitespace()
                                         .collect::<Vec<_>>()
                                         .into_iter()
                                         .filter(|word| word.chars()
@@ -35,9 +36,7 @@ fn main() {
                                                                 .unwrap() != '_')
                                         .collect();
 
-    let mut parse = false;
     let mut lines = Vec::new();
-    let mut last = "";
 
     let mut dict = HashMap::new();
     let mut key = "";
@@ -53,26 +52,8 @@ fn main() {
         }
     }
 
-    //********************UNUSED BLOCK, clean later
 
-    for word in tokens{
-        if word.ends_with(".") & (last.ends_with(".")){
-            parse = false;
-//            lines.push("END");
-        }
-        if parse{
-            lines.push(word);
-        }
-        if word == "HAMLET."{
-            parse = true;
-//            lines.push("START");
-        }
-
-        last = word;
-    }
-    //********************UNUSED BLOCK
-
-    //***********SET CHARACTER ***************
+    //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
     let speaker = "HORATIO."; //remove trailing period later
     match dict.get(speaker){
         Some(vocab) => lines = vocab.to_vec(),
@@ -84,18 +65,15 @@ fn main() {
 
     let group = lines.windows(3);
 
-    let mut histogram: HashMap<&str, (&str, &str)> = HashMap::new();
+    let mut histogram: HashMap<&str, Vec<(&str, &str)>> = HashMap::new();
 
     for words in group {
-
         let prefix = words[0];
         let suffix = (words[1], words[2]);
-        histogram.insert(prefix, suffix);
+        //histogram.insert(prefix, suffix);
+        histogram.entry(prefix).or_insert(Vec::new()).push(suffix);
     }
 
-//    for(key, value) in histogram{
-//        println!("{} / {:?}", key, value)
-//    }
 
     let potential_starts: Vec<&&str> = histogram.keys().collect();
     let random: usize = 45;
@@ -103,10 +81,19 @@ fn main() {
     let mut prefix: &str = potential_starts[random];
 
     let mut result = prefix.to_string();
+    let mut used = Vec::new(); //does nothing atm, just storing
+    let mut suffix_index;
+    let mut rng = thread_rng();
 
     for _ in 1 ..50 {
         match histogram.get(&prefix) {
-            Some(suffixes) => {
+            Some(suffixes_list) => {
+                used.push(prefix);
+
+                suffix_index = rng.gen_range(0, suffixes_list.len());
+                //println!("length:random {}:{}", suffixes_list.len(), suffix_index);
+                let mut suffixes = suffixes_list[suffix_index];
+
                 result = result + " " + suffixes.0 + " " + suffixes.1;
                 prefix = suffixes.1;
             },
@@ -117,4 +104,6 @@ fn main() {
         }
     }
     print!("{}\n", result);
+    //println!("{:?}", used);
+    //println!("{:?}", histogram);
 }
