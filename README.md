@@ -18,16 +18,16 @@ A Markov chain generator written in Rust
 ## Change log
 
 8/3/18
--Parsing
---parsing is now generalized to record all words for each character.
---Hashmap of CHARACTER : vector of strings
+- Parsing
+-- parsing is now generalized to record all words for each character.
+-- Hashmap of CHARACTER : vector of strings
 
 
 8/4/18
--Loop Issues
---Previously histogram was overwriting values as a `HashMap<&str, (&str, &str)>`
+- Loop Issues
+-- Previously histogram was overwriting values as a `HashMap<&str, (&str, &str)>`
   now a `HashMap<&str, Vec<(&str, &str)>>`
---Now randomly selects a suffix tuple if more than one is present.
+-- Now randomly selects a suffix tuple if more than one is present.
 
 
 ## Issues
