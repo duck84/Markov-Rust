@@ -1,4 +1,7 @@
 extern crate rand;
+extern crate clap;
+
+use clap::{Arg, App};
 use std::io::Read;
 use std::error::Error;
 use std::path::Path;
@@ -7,6 +10,18 @@ use std::collections::HashMap;
 use rand::prelude::*;
 
 fn main() {
+    let matches = App::new("Rget")
+        .version("0.1.0")
+        .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
+        .about("Markov generator written in Rust")
+        .arg(Arg::with_name("Character")
+                 .required(false)
+                 .takes_value(true)
+                 .index(1)
+                 .help("Choose character to speak"))
+        .get_matches();
+
+    //****************** FILE READ **************************
     let path = Path::new("../../text/hamlet.txt");
     let display = path.display();
 
@@ -18,7 +33,7 @@ fn main() {
     let mut text = String::new();
     match file.read_to_string(&mut text) {
         Err(why) => panic!("could not open {}: {}", display, why.description()),
-        Ok(_) => println!("File read success"),//print!("{} contains:\n{}", display, text),
+        Ok(_) => println!("File read success\n"),//print!("{} contains:\n{}", display, text),
     }
 
     //Filtering out non-speech words that don't start/end with valid chars
@@ -36,8 +51,8 @@ fn main() {
                                                                 .unwrap() != '_')
                                         .collect();
 
-    let mut lines = Vec::new();
-
+    let lines: Vec<_>;// = Vec::new();
+    //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
     let mut key = "";
     for word in &tokens{
@@ -51,13 +66,19 @@ fn main() {
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
         }
     }
+    println!("Character set: {:?}", dict.keys());
 
+    //**********Find default character (most lines) **********
+    let cast = dict.keys();
+    let star = cast.max_by_key(|key| dict.get(key.to_owned()).expect("no characters found").len()).unwrap();
+    println!("Starring... {}\n", star);
 
     //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
-    let speaker = "HORATIO."; //remove trailing period later
+    //let speaker = "HORATIO."; //remove trailing period later
+    let speaker = matches.value_of("Character").unwrap_or(star);
     match dict.get(speaker){
         Some(vocab) => lines = vocab.to_vec(),
-        None => println!("No character named: {}", speaker),
+        None => panic!("No character named: {}", speaker),
     }
     println!("{} says...", speaker);
 
@@ -76,7 +97,7 @@ fn main() {
 
 
     let potential_starts: Vec<&&str> = histogram.keys().collect();
-    let random: usize = 45;
+    let random: usize = 1; //since it's random anyway, might as well use 1 for fewer accidental panic
 
     let mut prefix: &str = potential_starts[random];
 
@@ -85,7 +106,7 @@ fn main() {
     let mut suffix_index;
     let mut rng = thread_rng();
 
-    for _ in 1 ..50 {
+    for _ in 1 ..30 {
         match histogram.get(&prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
