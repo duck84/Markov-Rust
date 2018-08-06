@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use rand::prelude::*;
 
 fn main() {
-    let matches = App::new("Rget")
+    let matches = App::new("Markov Generator")
         .version("0.1.0")
         .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
         .about("Markov generator written in Rust")
