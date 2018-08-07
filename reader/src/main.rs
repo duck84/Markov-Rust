@@ -84,13 +84,13 @@ fn main() {
 
     //***********HISTOGRAM ***************
 
-    let group = lines.windows(3);
+    let group = lines.windows(4);
 
-    let mut histogram: HashMap<&str, Vec<(&str, &str)>> = HashMap::new();
+    let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
 
     for words in group {
         let prefix = words[0];
-        let suffix = (words[1], words[2]);
+        let suffix = (words[1], words[2], words[3]);
         //histogram.insert(prefix, suffix);
         histogram.entry(prefix).or_insert(Vec::new()).push(suffix);
     }
@@ -106,7 +106,7 @@ fn main() {
     let mut suffix_index;
     let mut rng = thread_rng();
 
-    for _ in 1 ..30 {
+    for _ in 1 ..10 {
         match histogram.get(&prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
@@ -115,8 +115,8 @@ fn main() {
                 //println!("length:random {}:{}", suffixes_list.len(), suffix_index);
                 let mut suffixes = suffixes_list[suffix_index];
 
-                result = result + " " + suffixes.0 + " " + suffixes.1;
-                prefix = suffixes.1;
+                result = result + " " + suffixes.0 + " " + suffixes.1 + " " + suffixes.2;
+                prefix = suffixes.2;
             },
             None => {
                 break;
