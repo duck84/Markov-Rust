@@ -1,3 +1,8 @@
+// Copyright Mike McGrath and Jesse Zhu 2018
+// [This program is licensed under the "MIT License"]
+// Please see the file LICENSE in the source
+// distribution of this software for license terms.
+
 extern crate rand;
 extern crate clap;
 
@@ -9,6 +14,10 @@ use std::fs::File;
 use std::collections::HashMap;
 use rand::prelude::*;
 
+/// A function that opens a text file and reads the file to text.
+/// * 'file_path' - A &str of the file path used to find the file.
+/// * 'text' - A String that contains the Shakespeare play from
+///            the file.
 fn reader(file_path: &str) -> String {
     //****************** FILE READ **************************
     let path = Path::new(file_path);
@@ -26,7 +35,11 @@ fn reader(file_path: &str) -> String {
     }
     text
 }
-
+/// A function that takes a &str of text and returns a Vec of Strings.
+/// It filters out no alphabetic words and splits on whitespace.
+/// * 'text' - The text you want to tokenize. Passed in at a &str.
+///            It should be a Shakespeare text from a file.
+/// * 'tokens' - A Vec of Strings of each word from the original text.
 fn tokenizer(text: &str) -> Vec<String> {
 
     //Filtering out non-speech words that don't start/end with valid chars
@@ -139,6 +152,9 @@ fn main() {
         }
     }
     print!("{}\n", result);
+//    for (key, value) in &histogram{
+//        println!("{}, {:?}", key, value);
+//    }
     //println!("{:?}", used);
     //println!("{:?}", histogram);
 }
