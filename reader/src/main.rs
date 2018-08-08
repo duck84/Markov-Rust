@@ -9,6 +9,46 @@ use std::fs::File;
 use std::collections::HashMap;
 use rand::prelude::*;
 
+fn reader(file_path: &str) -> String {
+    //****************** FILE READ **************************
+    let path = Path::new(file_path);
+    let display = path.display();
+
+    let mut file = match File::open(&path){
+        Err(why) => panic!("could not open {}: {}", display, why.description()),
+        Ok(file) => file,
+    };
+
+    let mut text = String::new();
+    match file.read_to_string(&mut text) {
+        Err(why) => panic!("could not open {}: {}", file_path, why.description()),
+        Ok(_) => println!("File read success\n"),//print!("{} contains:\n{}", display, text),
+    }
+    text
+}
+
+fn tokenizer(text: &str) -> Vec<String> {
+
+    //Filtering out non-speech words that don't start/end with valid chars
+    //Doesn't catch stuff like "_Hic et ubique?_"
+    let textstring = text.replace("’", "'"); //terminal output can't print the first one
+
+    let tokens: Vec<String> = textstring.split_whitespace()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .filter(|word| word.chars()
+            .next()
+            .unwrap()
+            .is_alphabetic()
+            &&word.chars()
+            .last()
+            .unwrap() != '_')
+        .map(|x| x.to_string())
+        .collect();
+
+    tokens
+}
+
 fn main() {
     let matches = App::new("Markov Generator")
         .version("0.1.0")
@@ -21,35 +61,10 @@ fn main() {
                  .help("Choose character to speak"))
         .get_matches();
 
-    //****************** FILE READ **************************
-    let path = Path::new("../../text/hamlet.txt");
-    let display = path.display();
+    let path = "../../text/twelfth.txt";
+    let text = reader(path);
+    let tokens = tokenizer(text.as_str());
 
-    let mut file = match File::open(&path){
-        Err(why) => panic!("could not open {}: {}", display, why.description()),
-        Ok(file) => file,
-    };
-
-    let mut text = String::new();
-    match file.read_to_string(&mut text) {
-        Err(why) => panic!("could not open {}: {}", display, why.description()),
-        Ok(_) => println!("File read success\n"),//print!("{} contains:\n{}", display, text),
-    }
-
-    //Filtering out non-speech words that don't start/end with valid chars
-    //Doesn't catch stuff like "_Hic et ubique?_"
-    let textstring = text.replace("’","'"); //terminal output can't print the first one
-    let tokens: Vec<&str> = textstring.split_whitespace()
-                                        .collect::<Vec<_>>()
-                                        .into_iter()
-                                        .filter(|word| word.chars()
-                                                            .next()
-                                                            .unwrap()
-                                                            .is_alphabetic()
-                                                        &&word.chars()
-                                                                .last()
-                                                                .unwrap() != '_')
-                                        .collect();
 
     let lines: Vec<_>;// = Vec::new();
     //***********SORT TEXT into speaker:[words] hashmap **************
@@ -89,10 +104,10 @@ fn main() {
     let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
 
     for words in group {
-        let prefix = words[0];
-        let suffix = (words[1], words[2], words[3]);
+        let prefix = words[0].as_str();
+        let suffix = (words[1].as_str(), words[2].as_str(), words[3].as_str());
         //histogram.insert(prefix, suffix);
-        histogram.entry(prefix).or_insert(Vec::new()).push(suffix);
+        histogram.entry(&prefix).or_insert(Vec::new()).push(suffix);
     }
 
 
@@ -114,7 +129,6 @@ fn main() {
                 suffix_index = rng.gen_range(0, suffixes_list.len());
                 //println!("length:random {}:{}", suffixes_list.len(), suffix_index);
                 let mut suffixes = suffixes_list[suffix_index];
-
                 result = result + " " + suffixes.0 + " " + suffixes.1 + " " + suffixes.2;
                 prefix = suffixes.2;
             },
