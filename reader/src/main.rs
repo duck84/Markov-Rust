@@ -62,6 +62,56 @@ fn tokenizer(text: &str) -> Vec<String> {
     tokens
 }
 
+/// A function that goes through the text and finds every character
+/// to create a character set. From this set, the function finds
+/// all the lines for each character. Then, the function finds
+/// the star of the play (the person with the most lines). Finally,
+/// the function returns the stats lines, or another character's
+/// line as entered on the command line.
+/// * 'tokens' - All the words of the play as a Vec of Strings.
+/// * 'speaker' - The character entered on the command line. If
+///               none, then the star.
+/// * 'lines' - A Vec of Strings of all the lines of the character
+///             selected.
+fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
+    let lines: Vec<_>;// = Vec::new();
+    //***********SORT TEXT into speaker:[words] hashmap **************
+    let mut dict = HashMap::new();
+    let mut key = "";
+    for word in &tokens{
+        //Finds capitalized NAMES. and sets KEY
+        if word == &word.to_uppercase()
+            && word.ends_with("."){
+            key = word;
+        }
+            //ELSE push WORD to DICT
+            else{
+                dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
+            }
+    }
+    println!("Character set: {:?}", dict.keys());
+
+    //**********Find default character (most lines) **********
+    let cast = dict.keys();
+    let star = cast.max_by_key(|key| dict.get(key.to_owned()).expect("no characters found").len()).unwrap();
+    println!("Starring... {}\n", star);
+    //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
+    //let speaker = "HORATIO."; //remove trailing period later
+    if speaker == "" {
+        match dict.get(star){
+            Some(vocab) => lines = vocab.to_vec(),
+            None => panic!("No character named: {}", speaker),
+        }
+    } else {
+        match dict.get(speaker) {
+            Some(vocab) => lines = vocab.to_vec(),
+            None => panic!("No character named: {}", speaker),
+        }
+    }
+    println!("{} says...", speaker);
+    lines
+}
+
 fn main() {
     let matches = App::new("Markov Generator")
         .version("0.1.0")
@@ -74,41 +124,15 @@ fn main() {
                  .help("Choose character to speak"))
         .get_matches();
 
-    let path = "../../text/twelfth.txt";
+    let path = "../../text/hamlet.txt";
     let text = reader(path);
     let tokens = tokenizer(text.as_str());
+    let speaker = matches.value_of("Character").unwrap_or("");
+    let lines: Vec<String> = parser(tokens, speaker);
 
 
-    let lines: Vec<_>;// = Vec::new();
-    //***********SORT TEXT into speaker:[words] hashmap **************
-    let mut dict = HashMap::new();
-    let mut key = "";
-    for word in &tokens{
-        //Finds capitalized NAMES. and sets KEY
-        if word == &word.to_uppercase()
-            && word.ends_with("."){
-            key = word;
-        }
-        //ELSE push WORD to DICT
-        else{
-            dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
-        }
-    }
-    println!("Character set: {:?}", dict.keys());
 
-    //**********Find default character (most lines) **********
-    let cast = dict.keys();
-    let star = cast.max_by_key(|key| dict.get(key.to_owned()).expect("no characters found").len()).unwrap();
-    println!("Starring... {}\n", star);
 
-    //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
-    //let speaker = "HORATIO."; //remove trailing period later
-    let speaker = matches.value_of("Character").unwrap_or(star);
-    match dict.get(speaker){
-        Some(vocab) => lines = vocab.to_vec(),
-        None => panic!("No character named: {}", speaker),
-    }
-    println!("{} says...", speaker);
 
     //***********HISTOGRAM ***************
 
@@ -134,16 +158,17 @@ fn main() {
     let mut suffix_index;
     let mut rng = thread_rng();
 
-    for _ in 1 ..10 {
+    for _ in 1 ..12 {
         match histogram.get(&prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
-
                 suffix_index = rng.gen_range(0, suffixes_list.len());
-                //println!("length:random {}:{}", suffixes_list.len(), suffix_index);
                 let mut suffixes = suffixes_list[suffix_index];
                 result = result + " " + suffixes.0 + " " + suffixes.1 + " " + suffixes.2;
                 prefix = suffixes.2;
+                if prefix.contains(".") | prefix.contains("!") | prefix.contains("?"){
+                    break;
+                }
             },
             None => {
                 break;
