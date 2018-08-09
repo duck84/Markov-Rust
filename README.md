@@ -26,6 +26,7 @@ view, And let us hear Of carnal, bloody and you from our sight. As I beseech you
 - Menu selection system
 - More natural start/stopping points
 - Code cleanup to functions for legibility
+- tests for each function
 
 ## Change log
 

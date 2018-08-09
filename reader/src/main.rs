@@ -5,7 +5,9 @@
 
 extern crate rand;
 extern crate clap;
+extern crate regex; // 1.0.2
 
+use regex::Regex;
 use clap::{Arg, App};
 use std::io::Read;
 use std::error::Error;
@@ -36,29 +38,20 @@ fn reader(file_path: &str) -> String {
     text
 }
 /// A function that takes a &str of text and returns a Vec of Strings.
-/// It filters out no alphabetic words and splits on whitespace.
+/// It filters out non-spoken words and splits on whitespace.
 /// * 'text' - The text you want to tokenize. Passed in at a &str.
 ///            It should be a Shakespeare text from a file.
 /// * 'tokens' - A Vec of Strings of each word from the original text.
 fn tokenizer(text: &str) -> Vec<String> {
+    //Filtering out non-speech words i.e. _blah_ or [blah] and [SCENE I.]
+    let re = Regex::new(r"\[.+\]|_.+_|SCENE.+\.|Scene.+\.").unwrap();
+    let filtered = re.replace_all(text, "");
 
-    //Filtering out non-speech words that don't start/end with valid chars
-    //Doesn't catch stuff like "_Hic et ubique?_"
-    let textstring = text.replace("’", "'"); //terminal output can't print the first one
-
-    let tokens: Vec<String> = textstring.split_whitespace()
+    let tokens: Vec<String> = filtered.split_whitespace()
         .collect::<Vec<_>>()
         .into_iter()
-        .filter(|word| word.chars()
-            .next()
-            .unwrap()
-            .is_alphabetic()
-            &&word.chars()
-            .last()
-            .unwrap() != '_')
         .map(|x| x.to_string())
         .collect();
-
     tokens
 }
 
@@ -74,20 +67,20 @@ fn tokenizer(text: &str) -> Vec<String> {
 /// * 'lines' - A Vec of Strings of all the lines of the character
 ///             selected.
 fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
+    let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
     let lines: Vec<_>;// = Vec::new();
     //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
-    let mut key = "";
+    let mut key = ""; //Everything before first speaker stored in empty string
     for word in &tokens{
         //Finds capitalized NAMES. and sets KEY
-        if word == &word.to_uppercase()
-            && word.ends_with("."){
+        if re_char.is_match(word){
             key = word;
         }
-            //ELSE push WORD to DICT
-            else{
-                dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
-            }
+        //ELSE push WORD to DICT
+        else{
+            dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
+        }
     }
     println!("Character set: {:?}", dict.keys());
 
