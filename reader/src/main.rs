@@ -67,6 +67,7 @@ fn tokenizer(text: &str) -> Vec<String> {
 /// * 'lines' - A Vec of Strings of all the lines of the character
 ///             selected.
 fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
+    let speaker2: &str;
     let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
     let lines: Vec<_>;// = Vec::new();
     //***********SORT TEXT into speaker:[words] hashmap **************
@@ -91,17 +92,19 @@ fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
     //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
     //let speaker = "HORATIO."; //remove trailing period later
     if speaker == "" {
+        speaker2 = star;
         match dict.get(star){
             Some(vocab) => lines = vocab.to_vec(),
             None => panic!("No character named: {}", speaker),
         }
     } else {
+        speaker2 = speaker;
         match dict.get(speaker) {
             Some(vocab) => lines = vocab.to_vec(),
             None => panic!("No character named: {}", speaker),
         }
     }
-    println!("{} says...", speaker);
+    println!("{} says...", speaker2);
     lines
 }
 
