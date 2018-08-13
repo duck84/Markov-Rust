@@ -15,6 +15,9 @@ use std::path::Path;
 use std::fs::File;
 use std::collections::HashMap;
 use rand::prelude::*;
+use std::io::stdin;
+use std::io::stdout;
+use std::io::Write;
 
 /// A function that opens a text file and reads the file to text.
 /// * 'file_path' - A &str of the file path used to find the file.
@@ -120,15 +123,13 @@ fn main() {
                  .help("Choose character to speak"))
         .get_matches();
 
-    let path = "../../text/hamlet.txt";
+    let path = play_selector();
+
+//    let path = "../../text/hamlet.txt";
     let text = reader(path);
     let tokens = tokenizer(text.as_str());
     let speaker = matches.value_of("Character").unwrap_or("");
     let lines: Vec<String> = parser(tokens, speaker);
-
-
-
-
 
     //***********HISTOGRAM ***************
 
@@ -178,4 +179,28 @@ fn main() {
 //    }
     //println!("{:?}", used);
     //println!("{:?}", histogram);
+}
+/// A function that takes no arguments and returns a path to the text of a play.
+/// The function runs in the beginning of the problem and asks the user
+/// for the play they would like to use. The user selects the play from the choices
+/// and the function matches the input with lower case names of plays.
+///               none, then the star.
+/// * 'path' - A &str of the path to the text of the plays.
+fn play_selector() -> &'static str {
+    let mut input = String::new();
+    println!("Which play do you want to use:\nHamlet\nRomeo\nTwelfth Night\n");
+    let _ = stdout().flush();
+    stdin().read_line(&mut input).expect("Invalid string");
+    if let Some('\n') = input.chars().next_back() {
+        input.pop();
+    }
+    let input = input.to_lowercase();
+    let path: &str;
+    match input.as_ref() {
+        "hamlet" => path = "../../text/hamlet.txt",
+        "romeo" => path = "../../text/romeo.txt",
+        "twelfth night" => path = "../../text/twelfth.txt",
+    _ => {println!("Please select a valid play\n"); return play_selector()}
+    };
+    path
 }
