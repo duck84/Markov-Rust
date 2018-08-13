@@ -18,6 +18,7 @@ use rand::prelude::*;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
+use std::collections::hash_map::RandomState;
 
 /// A function that opens a text file and reads the file to text.
 /// * 'file_path' - A &str of the file path used to find the file.
@@ -69,24 +70,8 @@ fn tokenizer(text: &str) -> Vec<String> {
 ///               none, then the star.
 /// * 'lines' - A Vec of Strings of all the lines of the character
 ///             selected.
-fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
-    let speaker2: &str;
-    let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
-    let lines: Vec<_>;// = Vec::new();
-    //***********SORT TEXT into speaker:[words] hashmap **************
-    let mut dict = HashMap::new();
-    let mut key = ""; //Everything before first speaker stored in empty string
-    for word in &tokens{
-        //Finds capitalized NAMES. and sets KEY
-        if re_char.is_match(word){
-            key = word;
-        }
-        //ELSE push WORD to DICT
-        else{
-            dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
-        }
-    }
-    println!("Character set: {:?}", dict.keys());
+fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) -> Vec<String>{
+    let lines;
 
     //**********Find default character (most lines) **********
     let cast = dict.keys();
@@ -94,6 +79,7 @@ fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
     println!("Starring... {}\n", star);
     //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
     //let speaker = "HORATIO."; //remove trailing period later
+    let speaker2: &str;
     if speaker == "" {
         speaker2 = star;
         match dict.get(star){
@@ -111,8 +97,27 @@ fn parser<'a>(tokens: Vec<String>, speaker: &'a str) -> Vec<String>{
     lines
 }
 
+fn lines(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
+    let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
+//    let lines: Vec<_>;
+//***********SORT TEXT into speaker:[words] hashmap **************
+    let mut dict = HashMap::new();
+    let mut key = "";
+//Everything before first speaker stored in empty string
+    for word in tokens {
+        //Finds capitalized NAMES. and sets KEY
+        if re_char.is_match(word) {
+            key = word;
+        }
+            //ELSE push WORD to DICT else {
+            dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
+        }
+    println!("Character set: {:?}", dict.keys());
+    dict
+}
+
 fn main() {
-    let matches = App::new("Markov Generator")
+    let _matches = App::new("Markov Generator")
         .version("0.1.0")
         .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
         .about("Markov generator written in Rust")
@@ -124,12 +129,12 @@ fn main() {
         .get_matches();
 
     let path = play_selector();
-
-//    let path = "../../text/hamlet.txt";
     let text = reader(path);
     let tokens = tokenizer(text.as_str());
-    let speaker = matches.value_of("Character").unwrap_or("");
-    let lines: Vec<String> = parser(tokens, speaker);
+    let dict = lines(&tokens);
+    let speaker = character_selector(&dict);
+//    let speaker = matches.value_of("Character").unwrap_or("");
+    let lines: Vec<String> = parser(speaker.as_str(), &dict);
 
     //***********HISTOGRAM ***************
 
@@ -203,4 +208,20 @@ fn play_selector() -> &'static str {
     _ => {println!("Please select a valid play\n"); return play_selector()}
     };
     path
+}
+
+fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String {
+    let mut input = String::new();
+    println!("Which character do you want to talk to?\n");
+    let _ = stdout().flush();
+    stdin().read_line(&mut input).expect("Invalid string");
+    if let Some('\n') = input.chars().next_back() {
+        input.pop();
+    }
+//    let input = input.to_lowercase();
+    if dict.contains_key(input.as_str()){
+        input
+    }else {
+        return character_selector(dict);
+    }
 }
