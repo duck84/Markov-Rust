@@ -13,6 +13,7 @@ use std::io::Read;
 use std::error::Error;
 use std::path::Path;
 use std::fs::File;
+use std::fs;
 use std::collections::HashMap;
 use rand::prelude::*;
 use std::io::stdin;
@@ -160,23 +161,42 @@ fn markov_generator(lines: Vec<String>) {
 /// for the play they would like to use. The user selects the play from the choices
 /// and the function matches the input with lower case names of plays.
 ///               none, then the star.
-/// * 'path' - A &str of the path to the text of the plays.
-fn play_selector() -> &'static str {
+/// * 'path' - A String of the path to the text of the plays.
+
+fn play_selector() -> String {
+    let paths = fs::read_dir("../../text/").unwrap();
+    let mut allplays = Vec::new();
+    for path in paths {
+        if let Ok(path) = path {
+            // Here, `path` is a `DirEntry`.
+            allplays.push(path.file_name().into_string().expect("pathname not convertable to string")
+            .split(".").next().unwrap().to_owned());
+        }
+        //println!("{}", allplays.join("\n"));
+    }
+    let plays = allplays.join("\n");
+
     let mut input = String::new();
-    println!("Which play do you want to use:\nHamlet\nRomeo\nTwelfth Night\n");
+    println!("Which play do you want to use:");//\nHamlet\nRomeo\nTwelfth Night\n");
+    //let plays = "hamlet romeo twelfth night".to_owned();
+    println!("{}", plays);
+
     let _ = stdout().flush();
     stdin().read_line(&mut input).expect("Invalid string");
     if let Some('\n') = input.chars().next_back() {
         input.pop();
     }
     let input = input.to_lowercase();
-    let path: &str;
-    match input.as_ref() {
-        "hamlet" => path = "../../text/hamlet.txt",
-        "romeo" => path = "../../text/romeo.txt",
-        "twelfth night" => path = "../../text/twelfth.txt",
-        _ => {println!("Please select a valid play\n"); return play_selector()}
-    };
+    let path: String;
+    let pathbuilder = "../../text/".to_owned();
+
+    if plays.contains(&input){
+        path = format!("{}{}{}",pathbuilder, input, ".txt")
+    }
+    else{
+        println!("Please select a valid play\n");
+        return play_selector();
+    }
     path
 }
 /// A function that takes the hash map of characters and lines and asks the user
@@ -212,7 +232,7 @@ fn main() {
                  .index(1)
                  .help("Choose character to speak"))
         .get_matches();
-    let path = play_selector();
+    let path = &play_selector();
     let text = reader(path);
     let tokens = tokenizer(text.as_str());
     let dict = lines_reader(&tokens);
