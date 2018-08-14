@@ -43,16 +43,16 @@ fn reader(file_path: &str) -> String {
     text
 }
 /// A function that takes a &str of text and returns a Vec of Strings.
-/// It filters out non-spoken words and splits on whitespace.
+/// It filters out non-spoken words and splits on NEWLINE.
 /// * 'text' - The text you want to tokenize. Passed in at a &str.
 ///            It should be a Shakespeare text from a file.
-/// * 'tokens' - A Vec of Strings of each word from the original text.
+/// * 'tokens' - A Vec of Strings of each LINE from the original text.
 fn tokenizer(text: &str) -> Vec<String> {
     //Filtering out non-speech words i.e. _blah_ or [blah] and [SCENE I.]
     let re = Regex::new(r"\[.+\]|_.+_|SCENE.+\.|Scene.+\.").unwrap();
     let filtered = re.replace_all(text, "");
 
-    let tokens: Vec<String> = filtered.split_whitespace()
+    let tokens: Vec<String> = filtered.split('\n')
         .collect::<Vec<_>>()
         .into_iter()
         .map(|x| x.to_string())
@@ -107,18 +107,26 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
 fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
     //Hacky -- only accepts "names" w/ length >3
     //Re-implement file reader to read line-by-line later for better Speaker-identification @ line start
-    let re_char = Regex::new(r"^[A-Z]{4,}[\.:]$").unwrap();
+    let re_char = Regex::new(r"^[A-Z]{3,}[\.:]$").unwrap();
 //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
     let mut key = "HEADER";
 //Everything before first speaker stored in "HEADER" string
-    for word in tokens {
-        //Finds capitalized NAMES. and sets KEY
-        //ELSE push WORD to DICT
-        if re_char.is_match(word) {
-            key = word;
+//Finds capitalized NAMES. and sets KEY
+//ELSE push WORD to DICT
+    for line in tokens{
+        let mut words = line.split_whitespace();
+        let first = words.next();
+
+        match first {
+            Some(x) =>{if re_char.is_match(x) {
+                            key = x;
+                        }
+                    }
+            None    => continue,
         }
-        else {
+
+        for word in words {
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
         }
     }
@@ -241,8 +249,8 @@ fn main() {
     //              .index(1)
     //              .help("Choose character to speak"))
     //     .get_matches();
-    let path = &play_selector();
-    let text = reader(path);
+    let path = play_selector();
+    let text = reader(&path);
     let tokens = tokenizer(text.as_str());
     let dict = lines_reader(&tokens);
     let speaker = character_selector(&dict);
