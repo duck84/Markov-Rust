@@ -97,7 +97,7 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
     lines
 }
 
-fn lines(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
+fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
     let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
 //    let lines: Vec<_>;
 //***********SORT TEXT into speaker:[words] hashmap **************
@@ -116,51 +116,26 @@ fn lines(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
     dict
 }
 
-fn main() {
-    let _matches = App::new("Markov Generator")
-        .version("0.1.0")
-        .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
-        .about("Markov generator written in Rust")
-        .arg(Arg::with_name("Character")
-                 .required(false)
-                 .takes_value(true)
-                 .index(1)
-                 .help("Choose character to speak"))
-        .get_matches();
 
-    let path = play_selector();
-    let text = reader(path);
-    let tokens = tokenizer(text.as_str());
-    let dict = lines(&tokens);
-    let speaker = character_selector(&dict);
-//    let speaker = matches.value_of("Character").unwrap_or("");
-    let lines: Vec<String> = parser(speaker.as_str(), &dict);
-
-    //***********HISTOGRAM ***************
-
+fn markov_generator(lines: Vec<String>) {
     let group = lines.windows(4);
-
     let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
-
     for words in group {
-        let prefix = words[0].as_str();
+        let prefix = &words[0];
         let suffix = (words[1].as_str(), words[2].as_str(), words[3].as_str());
         //histogram.insert(prefix, suffix);
         histogram.entry(&prefix).or_insert(Vec::new()).push(suffix);
     }
-
-
     let potential_starts: Vec<&&str> = histogram.keys().collect();
-    let random: usize = 1; //since it's random anyway, might as well use 1 for fewer accidental panic
-
+    let random: usize = 1;
+//since it's random anyway, might as well use 1 for fewer accidental panic
     let mut prefix: &str = potential_starts[random];
-
     let mut result = prefix.to_string();
-    let mut used = Vec::new(); //does nothing atm, just storing
+    let mut used = Vec::new();
+//does nothing atm, just storing
     let mut suffix_index;
     let mut rng = thread_rng();
-
-    for _ in 1 ..12 {
+    for _ in 1..12 {
         match histogram.get(&prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
@@ -168,23 +143,18 @@ fn main() {
                 let mut suffixes = suffixes_list[suffix_index];
                 result = result + " " + suffixes.0 + " " + suffixes.1 + " " + suffixes.2;
                 prefix = suffixes.2;
-                if prefix.contains(".") | prefix.contains("!") | prefix.contains("?"){
+                if prefix.contains(".") | prefix.contains("!") | prefix.contains("?") {
                     break;
                 }
             },
             None => {
                 break;
             }
-
         }
     }
     print!("{}\n", result);
-//    for (key, value) in &histogram{
-//        println!("{}, {:?}", key, value);
-//    }
-    //println!("{:?}", used);
-    //println!("{:?}", histogram);
 }
+
 /// A function that takes no arguments and returns a path to the text of a play.
 /// The function runs in the beginning of the problem and asks the user
 /// for the play they would like to use. The user selects the play from the choices
@@ -205,11 +175,16 @@ fn play_selector() -> &'static str {
         "hamlet" => path = "../../text/hamlet.txt",
         "romeo" => path = "../../text/romeo.txt",
         "twelfth night" => path = "../../text/twelfth.txt",
-    _ => {println!("Please select a valid play\n"); return play_selector()}
+        _ => {println!("Please select a valid play\n"); return play_selector()}
     };
     path
 }
-
+/// A function that takes the hash map of characters and lines and asks the user
+/// to pick a character from the play to talk to. A potential refactor would to
+/// pass just the key values to the function.
+/// * 'dict' - A reference to a hash map of the lines in the play as strings.
+/// * 'input' - A string that the user inputs. It has to match the character choice
+/// exactly.
 fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String {
     let mut input = String::new();
     println!("Which character do you want to talk to?\n");
@@ -224,4 +199,24 @@ fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String 
     }else {
         return character_selector(dict);
     }
+}
+
+fn main() {
+    let _matches = App::new("Markov Generator")
+        .version("0.1.0")
+        .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
+        .about("Markov generator written in Rust")
+        .arg(Arg::with_name("Character")
+                 .required(false)
+                 .takes_value(true)
+                 .index(1)
+                 .help("Choose character to speak"))
+        .get_matches();
+    let path = play_selector();
+    let text = reader(path);
+    let tokens = tokenizer(text.as_str());
+    let dict = lines_reader(&tokens);
+    let speaker = character_selector(&dict);
+    let lines: Vec<String> = parser(speaker.as_str(), &dict);
+    markov_generator(lines);
 }
