@@ -121,7 +121,8 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
 
         match first {
             Some(x) =>{if re_char.is_match(x) {
-                            key = x;
+                            let len = x.len();
+                            key = &x[0..len-1];
                         }
                     }
             None    => continue,
@@ -231,7 +232,7 @@ fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String 
     if let Some('\n') = input.chars().next_back() {
         input.pop();
     }
-//    let input = input.to_lowercase();
+    let input = input.to_uppercase();
     if dict.contains_key(input.as_str()) || input == ""{
         input
     }else {
