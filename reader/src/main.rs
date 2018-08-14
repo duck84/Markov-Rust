@@ -4,11 +4,11 @@
 // distribution of this software for license terms.
 
 extern crate rand;
-extern crate clap;
+//extern crate clap;
 extern crate regex; // 1.0.2
 
 use regex::Regex;
-use clap::{Arg, App};
+//use clap::{Arg, App};
 use std::io::Read;
 use std::error::Error;
 use std::path::Path;
@@ -77,11 +77,12 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
     //**********Find default character (most lines) **********
     let cast = dict.keys();
     let star = cast.max_by_key(|key| dict.get(key.to_owned()).expect("no characters found").len()).unwrap();
-    println!("Starring... {}\n", star);
+
     //***********SET CHARACTER ***************POLONIUS. HORATIO. HAMLET.
     //let speaker = "HORATIO."; //remove trailing period later
     let speaker2: &str;
     if speaker == "" {
+        println!("Starring... {}\n", star);
         speaker2 = star;
         match dict.get(star){
             Some(vocab) => lines = vocab.to_vec(),
@@ -98,21 +99,29 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
     lines
 }
 
+/// A function that reads the string-array contents and records each word
+/// into a `speaker to words` hashmap.
+/// * 'tokens' - All the words of the play as a Vec of Strings.
+/// * 'dict' - A hashmap containing key = speaker, value = [words]
+
 fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
-    let re_char = Regex::new(r"^[A-Z]+[\.:]$").unwrap();
-//    let lines: Vec<_>;
+    //Hacky -- only accepts "names" w/ length >3
+    //Re-implement file reader to read line-by-line later for better Speaker-identification @ line start
+    let re_char = Regex::new(r"^[A-Z]{4,}[\.:]$").unwrap();
 //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
-    let mut key = "";
-//Everything before first speaker stored in empty string
+    let mut key = "HEADER";
+//Everything before first speaker stored in "HEADER" string
     for word in tokens {
         //Finds capitalized NAMES. and sets KEY
+        //ELSE push WORD to DICT
         if re_char.is_match(word) {
             key = word;
         }
-            //ELSE push WORD to DICT else {
+        else {
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
         }
+    }
     println!("Character set: {:?}", dict.keys());
     dict
 }
@@ -207,31 +216,31 @@ fn play_selector() -> String {
 /// exactly.
 fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String {
     let mut input = String::new();
-    println!("Which character do you want to talk to?\n");
+    println!("Which character do you want to talk to? (Press 'enter' for default)\n");
     let _ = stdout().flush();
     stdin().read_line(&mut input).expect("Invalid string");
     if let Some('\n') = input.chars().next_back() {
         input.pop();
     }
 //    let input = input.to_lowercase();
-    if dict.contains_key(input.as_str()){
+    if dict.contains_key(input.as_str()) || input == ""{
         input
     }else {
-        return character_selector(dict);
+        character_selector(dict)
     }
 }
 
 fn main() {
-    let _matches = App::new("Markov Generator")
-        .version("0.1.0")
-        .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
-        .about("Markov generator written in Rust")
-        .arg(Arg::with_name("Character")
-                 .required(false)
-                 .takes_value(true)
-                 .index(1)
-                 .help("Choose character to speak"))
-        .get_matches();
+    // let _matches = App::new("Markov Generator")
+    //     .version("0.1.0")
+    //     .author("Mike McGrath <mmcgrath@pdx.edu> \nJesse Zhu <jesszhu@pdx.edu>")
+    //     .about("Markov generator written in Rust")
+    //     .arg(Arg::with_name("Character")
+    //              .required(false)
+    //              .takes_value(true)
+    //              .index(1)
+    //              .help("Choose character to speak"))
+    //     .get_matches();
     let path = &play_selector();
     let text = reader(path);
     let tokens = tokenizer(text.as_str());
