@@ -31,7 +31,9 @@ fn reader(file_path: &str) -> String {
     let display = path.display();
 
     let mut file = match File::open(&path){
-        Err(why) => panic!("could not open {}: {}", display, why.description()),
+        Err(why) => {println!("could not open {}: {}", display, why.description());
+        return reader(&play_selector());},//panic!("could not open {}: {}", display, why.description()),
+
         Ok(file) => file,
     };
 
@@ -105,9 +107,8 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
 /// * 'dict' - A hashmap containing key = speaker, value = [words]
 
 fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
-    //Hacky -- only accepts "names" w/ length >3
-    //Re-implement file reader to read line-by-line later for better Speaker-identification @ line start
-    let re_char = Regex::new(r"^[A-Z]{3,}[\.:]$").unwrap();
+
+    let re_char = Regex::new(r"^[A-Z]{1,}[\.:]$").unwrap();
 //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
     let mut key = "HEADER";
