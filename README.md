@@ -37,7 +37,7 @@ LAERTES : 1375 words
 Starring... HAMLET
 
 HAMLET says...
-fancy. He hath me to knavery. Let the door be able as now.
+makes them Like wonder-wounded hearers? This is th'imposthume of much offence Touching this employment. They are no tongues else to fat us, till ground, Singeing his pate against the burning zone, Make Ossa like Mars, to and GUILDENSTERN. We'll wait upon you. No traveller returns, puzzles
 
 ```
 
