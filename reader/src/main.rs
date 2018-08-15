@@ -140,7 +140,7 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
 /// with a random starting word. The word is used as a prefix (key) in the hashmap of prefix:suffixes
 /// and the last suffix is used as the new key in building the output String.
 /// * 'lines' A vector of single word Strings
-fn markov_generator(lines: Vec<String>) {
+fn markov_generator(lines: &Vec<String>, reply: String) {
     let group = lines.windows(4);
     let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
     for words in group {
@@ -152,20 +152,38 @@ fn markov_generator(lines: Vec<String>) {
     let potential_starts: Vec<&&str> = histogram.keys().collect();
     let random: usize = 1;
 //since it's random anyway, might as well use 1 for fewer accidental panic
-    let mut prefix: &str = potential_starts[random];
+    let prefix_string;
+    let mut prefix: &str = "";
+    let split = reply.split_whitespace();
+    let mut vec: Vec<&str> = split.collect();
+    thread_rng().shuffle(&mut vec);
+    if reply.is_empty() {
+        prefix = potential_starts[random];
+    }else {
+        for word in vec{
+            if potential_starts.contains(&&word){
+                prefix_string = word.to_string();
+                prefix = prefix_string.as_str();
+                break;
+            } else {
+                prefix = potential_starts[random];
+            }
+        }
+    }
     let mut result = prefix.to_string();
     let mut used = Vec::new();
 //does nothing atm, just storing
     let mut suffix_index;
     let mut rng = thread_rng();
-    for _ in 1..16 {
-        match histogram.get(&prefix) {
+    let chain = rng.gen_range(2, 16);
+    for _ in 1..chain {
+        match histogram.get(prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
                 suffix_index = rng.gen_range(0, suffixes_list.len());
                 let mut suffixes = suffixes_list[suffix_index];
                 result = result + " " + suffixes.0 + " " + suffixes.1 + " " + suffixes.2;
-                prefix = suffixes.2;
+                prefix = &suffixes.2;
                 if prefix.contains(".") | prefix.contains("!") | prefix.contains("?") {
                     break;
                 }
@@ -191,7 +209,10 @@ fn play_selector() -> String {
     for path in paths {
         if let Ok(path) = path {
             // Here, `path` is a `DirEntry`.
-            allplays.push(path.file_name().into_string().expect("pathname not convertable to string")
+            allplays.push(path
+                .file_name()
+                .into_string()
+                .expect("pathname not convertable to string")
             .split(".").next().unwrap().to_owned());
         }
         //println!("{}", allplays.join("\n"));
@@ -199,9 +220,8 @@ fn play_selector() -> String {
     let plays = allplays.join("\n");
 
     let mut input = String::new();
-    println!("Which play do you want to use:");//\nHamlet\nRomeo\nTwelfth Night\n");
-    //let plays = "hamlet romeo twelfth night".to_owned();
-    println!("{}", plays);
+    println!("\nWhich play do you want to use:");
+    println!("{}", plays.to_uppercase());
 
     let _ = stdout().flush();
     stdin().read_line(&mut input).expect("Invalid string");
@@ -270,13 +290,21 @@ fn main() {
     //              .index(1)
     //              .help("Choose character to speak"))
     //     .get_matches();
+    let mut reply = "".to_string();
+    start();
     let path = play_selector();
     let text = reader(&path);
     let tokens = tokenizer(text.as_str());
     let dict = lines_reader(&tokens);
     let speaker = character_selector(&dict);
     let lines: Vec<String> = parser(speaker.as_str(), &dict);
-    markov_generator(lines);
+    markov_generator(lines.as_ref(), reply);
+    reply = talk();
+    while &reply != "STOP"{
+        println!("{} says...", speaker);
+        markov_generator(lines.as_ref(), reply);
+        reply = talk();
+    }
 }
 
 #[test]
@@ -294,4 +322,27 @@ fn test1() {
 
     assert_eq!(6, mydict.get("SPEAKERONE").expect("line_reader/tokenizer test").len(), "Should recognize
     CANADA. as a word, not a speaker");
+}
+
+fn start(){
+    println!("\n\n\n");
+    println!("************************************************************");
+    println!("***                                                      ***");
+    println!("***              Shakespeare Chat Bot                    ***");
+    println!("***                       by                             ***");
+    println!("***            A Markov Chain Generator                  ***");
+    println!("***                                                      ***");
+    println!("************************************************************");
+    println!("\nPick a play and character to chat with.\nWhen you are done type 'STOP' to exit the program.\n")
+}
+
+fn talk()-> String{
+    let mut input = String::new();
+    println!("\nWhat do you want to say?");
+    let _ = stdout().flush();
+    stdin().read_line(&mut input).expect("Invalid string");
+    if let Some('\n') = input.chars().next_back() {
+        input.pop();
+    }
+    input
 }
