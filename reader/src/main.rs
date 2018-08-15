@@ -6,6 +6,8 @@
 extern crate rand;
 //extern crate clap;
 extern crate regex; // 1.0.2
+extern crate inflector;
+extern crate colored;
 
 use regex::Regex;
 //use clap::{Arg, App};
@@ -20,6 +22,21 @@ use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
 use std::collections::hash_map::RandomState;
+use inflector::Inflector;
+use colored::*;
+
+/// A function that prints the title screen of the program.
+fn start(){
+    println!("\n\n\n");
+    println!("************************************************************");
+    println!("***                                                      ***");
+    println!("***              Shakespeare Chat Bot                    ***");
+    println!("***                       by                             ***");
+    println!("***            A Markov Chain Generator                  ***");
+    println!("***                                                      ***");
+    println!("************************************************************");
+    println!("\nPick a play and character to chat with.\nWhen you are done type 'STOP' to exit the program.\n")
+}
 
 /// A function that opens a text file and reads the file to text.
 /// * 'file_path' - A &str of the file path used to find the file.
@@ -97,7 +114,7 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
             None => panic!("No character named: {}", speaker),
         }
     }
-    println!("{} says...", speaker2);
+    println!("\n{} {}", speaker2.to_string().blue(), "says...".blue());
     lines
 }
 
@@ -144,8 +161,11 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
 
 /// A function that takes a vector of Strings, windows them into groups of 4, and then starts
 /// with a random starting word. The word is used as a prefix (key) in the hashmap of prefix:suffixes
-/// and the last suffix is used as the new key in building the output String.
+/// and the last suffix is used as the new key in building the output String. The reply is parsed
+/// to have the character generate a chain based on one of the words the user said.
 /// * 'lines' A vector of single word Strings
+/// * 'reply' A String that the user inputs. On the first call this is always empty, but afterwords
+///           it is the users questions or comments to the character.
 fn markov_generator(lines: &Vec<String>, reply: String) {
     let group = lines.windows(4);
     let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
@@ -155,24 +175,41 @@ fn markov_generator(lines: &Vec<String>, reply: String) {
         //histogram.insert(prefix, suffix);
         histogram.entry(&prefix).or_insert(Vec::new()).push(suffix);
     }
-    let potential_starts: Vec<&&str> = histogram.keys().collect();
+
+    let first_starts: Vec<&&str> = histogram
+        .keys()
+        .filter_map(|word| {
+            let c = word
+                .chars()
+                .next()
+                .unwrap();
+            if c.is_ascii_uppercase() {
+                Some(word)
+            }
+            else { None }
+        })
+        .collect();
+
+    let checked_starts: Vec<&&str> = histogram.keys().collect();
+
     let random: usize = 1;
 //since it's random anyway, might as well use 1 for fewer accidental panic
     let prefix_string;
     let mut prefix: &str = "";
     let split = reply.split_whitespace();
     let mut vec: Vec<&str> = split.collect();
-    thread_rng().shuffle(&mut vec);
+//    vec.reverse();                 could reverse the vec to 'find' the object of the sentence
+    thread_rng().shuffle(&mut vec); // Randomize the sentence to make the prefix more random
     if reply.is_empty() {
-        prefix = potential_starts[random];
-    }else {
-        for word in vec{
-            if potential_starts.contains(&&word){
-                prefix_string = word.to_string();
+        prefix = first_starts[random];
+    }else { for mut word in vec{
+            if checked_starts.contains(&&word){
+                let new_word = &word.to_title_case();
+                prefix_string = new_word.to_string();
                 prefix = prefix_string.as_str();
                 break;
             } else {
-                prefix = potential_starts[random];
+                prefix = first_starts[random];
             }
         }
     }
@@ -208,7 +245,6 @@ fn markov_generator(lines: &Vec<String>, reply: String) {
 /// and the function matches the input with lower case names of plays.
 ///               none, then the star.
 /// * 'path' - A String of the path to the text of the plays.
-
 fn play_selector() -> String {
     let paths = fs::read_dir("../../text/").unwrap();
     let mut allplays = Vec::new();
@@ -285,6 +321,21 @@ fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String 
     }
 }
 
+/// A function that takes in the users input and returns it as a String.
+/// This is used to set the reply variable.
+/// * 'input' A cleaned up version of the user input.
+fn talk()-> String{
+    let mut input = String::new();
+    println!("\n{}", "What do you want to say?".green());
+    let _ = stdout().flush();
+    stdin().read_line(&mut input).expect("Invalid string");
+    if let Some('\n') = input.chars().next_back() {
+        input.pop();
+    }
+    input
+}
+
+
 fn main() {
     // let _matches = App::new("Markov Generator")
     //     .version("0.1.0")
@@ -307,7 +358,7 @@ fn main() {
     markov_generator(lines.as_ref(), reply);
     reply = talk();
     while &reply != "STOP"{
-        println!("{} says...", speaker);
+        println!("\n{} {}", speaker.blue(), "says...".blue());
         markov_generator(lines.as_ref(), reply);
         reply = talk();
     }
@@ -328,27 +379,4 @@ fn test1() {
 
     assert_eq!(6, mydict.get("SPEAKERONE").expect("line_reader/tokenizer test").len(), "Should recognize
     CANADA. as a word, not a speaker");
-}
-
-fn start(){
-    println!("\n\n\n");
-    println!("************************************************************");
-    println!("***                                                      ***");
-    println!("***              Shakespeare Chat Bot                    ***");
-    println!("***                       by                             ***");
-    println!("***            A Markov Chain Generator                  ***");
-    println!("***                                                      ***");
-    println!("************************************************************");
-    println!("\nPick a play and character to chat with.\nWhen you are done type 'STOP' to exit the program.\n")
-}
-
-fn talk()-> String{
-    let mut input = String::new();
-    println!("\nWhat do you want to say?");
-    let _ = stdout().flush();
-    stdin().read_line(&mut input).expect("Invalid string");
-    if let Some('\n') = input.chars().next_back() {
-        input.pop();
-    }
-    input
 }
