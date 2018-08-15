@@ -1,1 +1,0 @@
-{"rustc":7891026547185948224,"features":"[\"default\", \"heavyweight\", \"lazy_static\", \"regex\"]","target":9323182107748389816,"profile":7990393541957723157,"path":6004305224238127087,"deps":[["lazy_static v1.1.0","lazy_static",8124694446705825473],["regex v1.0.2","regex",2593843468170225290]],"local":[{"Precalculated":"0.11.3"}],"rustflags":[],"edition":"Edition2015"}
