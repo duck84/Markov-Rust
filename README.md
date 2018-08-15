@@ -3,20 +3,42 @@ A Markov chain generator written in Rust
 
 ## Features
 - Read from file
-- Generalized Parsing
+- Generalized Parsing and reading from file source
 - Character selection
 - Histogram prefix-suffix storage (1 prefix: 2 suffix)
 - Randomized Markov output
 
+## Usage
+- Add your own files to the /text folder
+Parser currently assigns words to speakers based on the `^\n[A-Z]{3,}[.:]$` regex pattern.
+
+- cargo run
+
 ## Example output
-cargo run HORATIO.
+cargo run
 ```
-Character set: ["LORD.", "LORDS.", "HORATIO.", "CAPTAIN.", "V.", "FRANCISCO.", "PRIEST.", "HAMLET.", "FORTINBRAS.", "OSRIC.", "GUILDENSTERN.", "SCENE.", "OPHELIA.", "SERVANT.", "CLOWN.", "LUCIANUS.", "AMBASSADOR.", "BARNARDO.", "PROLOGUE.", "III.", "LAERTES.", "II.", "REYNALDO.", "MESSENGER.", "MARCELLUS.", "IV.", "", "ROSENCRANTZ.", "PLAYER.", "VOLTEMAND.", "VI.", "I.", "POLONIUS.", "BOTH.", "SAILOR.", "DANES.", "GHOST.", "KING.", "VII.", "QUEEN.", "ALL.", "GENTLEMAN."]
+Which play do you want to use:
+hamlet
+romeo
+trump
+twelfth
+hamlet
+File read success
 
-Starring... HAMLET.
+Full Character set: ["HEADER", "QUEEN", "MESSENGER", "LUCIANUS", "CAPTAIN", "ALL", "HAMLET", "BARNARDO", "LORD", "PRIEST", "SERVANT", "MARCELLUS", "HORATIO", "KING", "DANES", "PROLOGUE", "GENTLEMAN", "POLONIUS", "GUILDENSTERN", "BOTH", "ROSENCRANTZ", "OPHELIA", "GHOST", "REYNALDO", "OSRIC", "LAERTES", "FORTINBRAS", "FRANCISCO", "VOLTEMAND"]
+Which character do you want to talk to? (Press 'enter' for default)
 
-HORATIO. says...
-view, And let us hear Of carnal, bloody and you from our sight. As I beseech you. Ay, good turn for upon my lord? Good my lord, the King your father. Season your father; These are but wild and ordnance shot off within._] What does the drum come hither? within._] Enter Fortinbras, the night, Been thus encounter'd. A figure like your search. Not when I boarded them. SCENE Custom hath made probation. So Guildenstern and speak not from Lord Hamlet. Enter Osric. No, by no ghost, my lord. My lord, I Truly deliver. Of that I shall have also
+HAMLET : 11956 words
+KING : 4323 words
+POLONIUS : 2783 words
+HORATIO : 1959 words
+LAERTES : 1375 words
+
+Starring... HAMLET
+
+HAMLET says...
+fancy. He hath me to knavery. Let the door be able as now.
+
 ```
 
 ## Unimplemented Features / TODO

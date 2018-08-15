@@ -155,7 +155,7 @@ fn markov_generator(lines: Vec<String>) {
 //does nothing atm, just storing
     let mut suffix_index;
     let mut rng = thread_rng();
-    for _ in 1..12 {
+    for _ in 1..16 {
         match histogram.get(&prefix) {
             Some(suffixes_list) => {
                 used.push(prefix);
