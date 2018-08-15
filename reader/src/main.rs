@@ -108,7 +108,7 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
 
 fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
 
-    let re_char = Regex::new(r"^[A-Z]{1,}[\.:]$").unwrap();
+    let re_char = Regex::new(r"^[A-Z]{3,}[\.:]$").unwrap();
 //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
     let mut key = "HEADER";
@@ -132,7 +132,7 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
         }
     }
-    println!("Character set: {:?}", dict.keys());
+    println!("Full Character set: {:?}", dict.keys());
     dict
 }
 
@@ -227,6 +227,22 @@ fn play_selector() -> String {
 fn character_selector(dict: &HashMap<&str, Vec<String>, RandomState>) -> String {
     let mut input = String::new();
     println!("Which character do you want to talk to? (Press 'enter' for default)\n");
+    // Top 3 characters by word count
+    let keys = dict.keys();
+    let mut keysize: Vec<(&str, usize)> = Vec::new();
+    for key in keys{
+        keysize.push((&key, dict.get(key).unwrap().len()));
+    }
+    keysize.sort_by_key(|k| k.1);
+    keysize.reverse();
+    //println!("{:?}", keysize);
+    for i in 0..5 {
+        match keysize.get(i) {
+            Some(x) => println!("{} : {} words", x.0, x.1),
+            None => break,
+        };
+    }
+
     let _ = stdout().flush();
     stdin().read_line(&mut input).expect("Invalid string");
     if let Some('\n') = input.chars().next_back() {
@@ -258,4 +274,21 @@ fn main() {
     let speaker = character_selector(&dict);
     let lines: Vec<String> = parser(speaker.as_str(), &dict);
     markov_generator(lines);
+}
+
+#[test]
+fn test1() {
+    let mystring = "SPEAKERONE. I ate a banana in CANADA.\n SPEAKERTWO. ME. TOO.";
+    let tokens = tokenizer(mystring);
+    println!("{:?}", tokens);
+
+    assert_eq!(tokens, ["SPEAKERONE. I ate a banana in CANADA.", " SPEAKERTWO. ME. TOO."
+    ], "tokenizer assertion");
+
+    let mydict = lines_reader(&tokens);
+    assert_eq!(2, mydict.len(), "Asserting # speakers = 2");
+    println!("{:?}", mydict);
+
+    assert_eq!(6, mydict.get("SPEAKERONE").expect("line_reader/tokenizer test").len(), "Should recognize
+    CANADA. as a word, not a speaker");
 }
