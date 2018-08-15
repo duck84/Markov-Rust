@@ -1,1 +1,1 @@
-/home/mike/Rust/Markov-Rust/reader/target/debug/generator: /home/mike/Rust/Markov-Rust/reader/src/lib.rs /home/mike/Rust/Markov-Rust/reader/src/main.rs
+/home/jesse/MSCS/Summer2018/Rust/Markov-Rust/reader/target/debug/generator: /home/jesse/MSCS/Summer2018/Rust/Markov-Rust/reader/src/lib.rs /home/jesse/MSCS/Summer2018/Rust/Markov-Rust/reader/src/main.rs

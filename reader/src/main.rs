@@ -51,7 +51,7 @@ fn reader(file_path: &str) -> String {
 /// * 'tokens' - A Vec of Strings of each LINE from the original text.
 fn tokenizer(text: &str) -> Vec<String> {
     //Filtering out non-speech words i.e. _blah_ or [blah] and [SCENE I.]
-    let re = Regex::new(r"\[.+\]|_.+_|SCENE.+\.|Scene.+\.").unwrap();
+    let re = Regex::new(r"\[.+\]|_.+_|SCENE.+\.|Scene.+\.|ACT[ A-Z]{1,4}\.").unwrap();
     let filtered = re.replace_all(text, "");
 
     let tokens: Vec<String> = filtered.split('\n')
@@ -108,7 +108,7 @@ fn parser<'a>(speaker: &'a str, dict: &HashMap<&str, Vec<String>, RandomState>) 
 
 fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState>) {
 
-    let re_char = Regex::new(r"^[A-Z]{3,}[\.:]$").unwrap();
+    let re_char = Regex::new(r"^[\s]*[A-Z]*\s?[A-Z]{3,}[\.:]").unwrap();
 //***********SORT TEXT into speaker:[words] hashmap **************
     let mut dict = HashMap::new();
     let mut key = "HEADER";
@@ -116,17 +116,23 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
 //Finds capitalized NAMES. and sets KEY
 //ELSE push WORD to DICT
     for line in tokens{
-        let mut words = line.split_whitespace();
-        let first = words.next();
+        let mut splitline;
+        let matches = re_char.find(line);
 
-        match first {
-            Some(x) =>{if re_char.is_match(x) {
-                            let len = x.len();
-                            key = &x[0..len-1];
-                        }
-                    }
-            None    => continue,
-        }
+        match matches{
+            Some(x) => {
+                let speaker = x.as_str().trim();
+                //println!("match found {}", speaker);
+                let len = speaker.len();
+                key = &speaker[0..len-1];
+                //println!("key: {} line: {}", key, line);
+                splitline = line.split(speaker).last().unwrap().to_owned();
+                //println!("{:?}", splitline);
+            },
+
+            None => splitline = line.to_owned(),
+        };
+        let words = splitline.split_whitespace();
 
         for word in words {
             dict.entry(key).or_insert(Vec::new()).push(word.to_owned());
