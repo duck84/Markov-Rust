@@ -136,7 +136,10 @@ fn lines_reader(tokens: &Vec<String>) -> (HashMap<&str, Vec<String>, RandomState
     dict
 }
 
-
+/// A function that takes a vector of Strings, windows them into groups of 4, and then starts
+/// with a random starting word. The word is used as a prefix (key) in the hashmap of prefix:suffixes
+/// and the last suffix is used as the new key in building the output String.
+/// * 'lines' A vector of single word Strings
 fn markov_generator(lines: Vec<String>) {
     let group = lines.windows(4);
     let mut histogram: HashMap<&str, Vec<(&str, &str, &str)>> = HashMap::new();
