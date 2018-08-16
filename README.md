@@ -23,6 +23,7 @@ SIR ANDREW.
 
 ## Example output
 cargo run
+(when in /reader/src folder)
 ```
 Which play do you want to use:
 hamlet
@@ -54,6 +55,7 @@ makes them Like wonder-wounded hearers? This is th'imposthume of much offence To
 - Evaluate an input string to see which character it fits the most
 - More natural start/stopping points
 - Improve 'chatbot' feature by recognizing only "important" words in user speech (remove common words i.e. 'a', 'the')
+- Improve filepath recognition from relative to current directory to relative to base project directory
 
 
 ## Issues
