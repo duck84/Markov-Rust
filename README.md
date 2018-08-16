@@ -1,18 +1,25 @@
 # Markov-Rust
-A Markov chain generator written in Rust
+A Markov chain generator written in Rust. Chat with a Shakespeare character, or add your own text file!
 
 ## Features
-- Read from file
-- Generalized Parsing and reading from file source
+- Select any text file from /text folder
 - Character selection
-- Histogram prefix-suffix storage (1 prefix: 2 suffix)
-- Randomized Markov output
+- Randomized Markov output, based on what you type
 
 ## Usage
 - Add your own files to the /text folder
-Parser currently assigns words to speakers based on the `^\n[A-Z]{3,}[.:]$` regex pattern.
+Parser currently assigns words to speakers based on the `^[\s]*[A-Z]*\s?[A-Z]{3,}[\.:]` regex pattern.
+e.g.
+- Starting at the beginning of each line
+- Searches for CAPS words (up to 2)
+- Ends at a period or colon
+```
+HAMLET.
+HAMLET:
+SIR ANDREW.
+```
 
-- cargo run
+- `cargo run` to operate
 
 ## Example output
 cargo run
@@ -41,46 +48,17 @@ makes them Like wonder-wounded hearers? This is th'imposthume of much offence To
 
 ```
 
-## Unimplemented Features / TODO
+## Unimplemented Features
 - Loop mitigation
 - Characters talking to each other (by scanning previous message for prefixes to use)
 - Evaluate an input string to see which character it fits the most
-- Menu selection system
 - More natural start/stopping points
-- Code cleanup to functions for legibility
-- tests for each function
-
-## Change log
-
-8/3/18
-- Parsing
--- parsing is now generalized to record all words for each character.
--- Hashmap of CHARACTER : vector of strings
-
-
-8/4/18
-- Loop Issues
--- Previously histogram was overwriting values as a `HashMap<&str, (&str, &str)>`
-  now a `HashMap<&str, Vec<(&str, &str)>>`
--- Now randomly selects a suffix tuple if more than one is present.
-
-
-8/5/18
-- Command line character selection
-  - Using Clap crate
-  - Defaults to character with most lines if argument not given
+- Improve 'chatbot' feature by recognizing only "important" words in user speech (remove common words i.e. 'a', 'the')
 
 
 ## Issues
 
 - parsing
 
-Non-speech words entered into vocab (PLAYER)
-```
-blow them to lament with you: And you, my cause, And with such ambiguous giving out, to know himself. What's his fines, and a Queen. PLAYER Wormwood, wormwood. PLAYER Wormwood, wormwood. PLAYER Ophelia._]
-```
+Some non-character words end up matching character regex
 
-Scene, empty, and acts (I, II, III...) are recognized as characters
-```
-"MARCELLUS.", "", "SCENE.", "GUILDENSTERN.", "PLAYER.", "I."
-```
